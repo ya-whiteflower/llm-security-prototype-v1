@@ -35,7 +35,7 @@ if st.button("Analyze Request"):
 
         st.subheader("Security Analysis")
 
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
 
         with col1:
             st.metric("Risk Level", result["input_risk"])
@@ -43,6 +43,10 @@ if st.button("Analyze Request"):
 
         with col2:
             st.metric("Pipeline Status", result["status"])
+            st.metric("Input Action", result["input_action"])
+
+        with col3:
+            st.metric("Semantic Score", result.get("semantic_score", 0))
             st.metric("Epsilon", result["epsilon"])
 
         st.markdown("---")
@@ -50,9 +54,39 @@ if st.button("Analyze Request"):
         st.subheader("Detected Threats")
 
         if result["input_detected_types"]:
+            st.write("Detected threat categories:")
             st.write(result["input_detected_types"])
         else:
             st.success("No attack patterns detected.")
+
+        st.write("Matched patterns:")
+        st.write(result.get("matched_patterns", []))
+
+        st.markdown("---")
+
+        st.subheader("Semantic Analysis")
+
+        semantic_detected = result.get("semantic_detected", False)
+
+        if semantic_detected:
+            st.warning("Semantic similarity detected potentially unsafe intent.")
+        else:
+            st.success("No high-risk semantic similarity detected.")
+
+        col_sem1, col_sem2 = st.columns(2)
+
+        with col_sem1:
+            st.write("Semantic category:")
+            st.write(result.get("semantic_category"))
+
+            st.write("Semantic score:")
+            st.write(result.get("semantic_score"))
+
+        with col_sem2:
+            st.write("Most similar attack example:")
+            st.write(result.get("semantic_matched_example"))
+
+        st.markdown("---")
 
         st.subheader("Privacy Protection")
 
@@ -64,6 +98,9 @@ if st.button("Analyze Request"):
 
         st.write("Detected numeric values:")
         st.write(result["privacy_detected_numbers"])
+
+        st.write("Privacy parameter epsilon:")
+        st.write(result["epsilon"])
 
         st.markdown("---")
 
@@ -79,7 +116,12 @@ if st.button("Analyze Request"):
 
         st.subheader("Final Response")
 
-        st.success(result["final_response"])
+        if result["status"] in ["blocked_input", "blocked_output"]:
+            st.error(result["final_response"])
+        elif result["status"] == "review_required":
+            st.warning(result["final_response"])
+        else:
+            st.success(result["final_response"])
 
         st.markdown("---")
 
