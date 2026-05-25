@@ -12,7 +12,7 @@ class SemanticFilter:
         self,
         examples_path: str = "data/semantic_attack_examples.json",
         model_name: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-        threshold: float = 0.62,
+        threshold: float = 0.72,
         weight: int = 35,
     ):
         self.examples_path = Path(examples_path)

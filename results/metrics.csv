@@ -1,2 +1,2 @@
-total_prompts,correct_predictions,accuracy,blocked_requests,allowed_requests,false_positive,false_negative
-21,18,0.86,11,5,0,0
+total_prompts,correct_predictions,accuracy,blocked_requests,sanitized_requests,review_requests,allowed_requests
+29,24,0.83,16,3,5,5
