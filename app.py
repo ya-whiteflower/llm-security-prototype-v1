@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-from src.llm_client import FakeLLMClient
+from src.llm_client import OllamaLLMClient
 from src.pipeline import SecurityPipeline
 
 
@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-llm = FakeLLMClient()
+llm = OllamaLLMClient()
 pipeline = SecurityPipeline(llm)
 
 st.title("LLM Security Protection System")
