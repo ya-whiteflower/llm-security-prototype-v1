@@ -16,7 +16,7 @@ class SecurityPipeline:
     def process(self, user_prompt: str) -> dict:
         input_check = self.input_filter.check(user_prompt)
 
-        if not input_check["allowed"]:
+        if input_check["action"] == "block":
             result = {
                 "timestamp": datetime.now(),
                 "status": "blocked_input",
@@ -25,24 +25,37 @@ class SecurityPipeline:
                 "model_response": None,
                 "final_response": "Запрос заблокирован системой безопасности.",
                 "input_risk": input_check["risk"],
+                "input_risk_score": input_check["risk_score"],
+                "input_action": input_check["action"],
                 "input_detected_types": input_check["detected_types"],
+                "privacy_detected_entities": [],
                 "output_risk": None,
             }
             self.logs.append(result)
             return result
 
-        safe_prompt = self.privacy_layer.anonymize(user_prompt)
+        privacy_input = self.privacy_layer.anonymize(user_prompt)
+        safe_prompt = privacy_input["text"]
+
         model_response = self.llm_client.generate(safe_prompt)
-        safe_response = self.privacy_layer.anonymize(model_response)
+
+        privacy_output = self.privacy_layer.anonymize(model_response)
+        safe_response = privacy_output["text"]
 
         output_check = self.output_filter.check(safe_response)
 
         if not output_check["allowed"]:
-            final_response = "Ответ модели заблокирован системой безопасности."
             status = "blocked_output"
-        else:
+            final_response = "Ответ модели заблокирован системой безопасности."
+        elif input_check["action"] == "review":
+            status = "review_required"
             final_response = safe_response
+        elif privacy_input["was_anonymized"] or privacy_output["was_anonymized"]:
+            status = "sanitized"
+            final_response = safe_response
+        else:
             status = "success"
+            final_response = safe_response
 
         result = {
             "timestamp": datetime.now(),
@@ -52,7 +65,12 @@ class SecurityPipeline:
             "model_response": model_response,
             "final_response": final_response,
             "input_risk": input_check["risk"],
+            "input_risk_score": input_check["risk_score"],
+            "input_action": input_check["action"],
             "input_detected_types": input_check["detected_types"],
+            "privacy_detected_entities": list(
+                set(privacy_input["detected_entities"] + privacy_output["detected_entities"])
+            ),
             "output_risk": output_check["risk"],
         }
 

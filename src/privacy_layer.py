@@ -11,10 +11,18 @@ class PrivacyLayer:
             "SNILS": r"\b\d{3}-\d{3}-\d{3}\s?\d{2}\b",
         }
 
-    def anonymize(self, text: str) -> str:
+    def anonymize(self, text: str) -> dict:
         result = text
+        detected_entities = []
 
         for label, pattern in self.patterns.items():
-            result = re.sub(pattern, f"[{label}]", result)
+            matches = re.findall(pattern, result)
+            if matches:
+                detected_entities.append(label)
+                result = re.sub(pattern, f"[{label}]", result)
 
-        return result
+        return {
+            "text": result,
+            "was_anonymized": len(detected_entities) > 0,
+            "detected_entities": detected_entities,
+        }
